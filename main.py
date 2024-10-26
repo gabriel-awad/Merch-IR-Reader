@@ -1,3 +1,14 @@
+import os
+import subprocess
+
+# Check if it's the first run
+if not os.path.exists('first_run_complete'):
+    # Run the shell script to install dependencies
+    subprocess.run(['bash', 'install_dependencies.sh'], check=True)
+    # Create a file to indicate the first run is complete
+    with open('first_run_complete', 'w') as f:
+        f.write('This file marks that the first run dependencies were installed.')
+
 import RPi.GPIO as GPIO
 import time
 import board
@@ -134,4 +145,60 @@ def read_ir_code():
 def send_udp_command(command):
     global udp_ip, udp_port
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(command.encode('utf-8'), (udp_ip, udp_port[_{{{CITATION{{{_1{](https://github.com/sagnikghoshcr7/Three.js/tree/e306e5900993f46629c9c9d856f911b2785e4f24/03-basic-scene%2FREADME.md)
+    sock.sendto(command.encode('utf-8'), (udp_ip, udp_port))
+
+def send_grafana_metric(value):
+    headers = {
+        'Authorization': f'Bearer {grafana_api_key}',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        "tags": ["activation_count"],
+        "text": f"Activation Count: {value}"
+    }
+    response = requests.post(grafana_url, headers=headers, json=data)
+    if response.status_code == 200:
+        print("Metric sent to Grafana")
+    else:
+        print(f"Failed to send metric to Grafana: {response.content}")
+
+def main_loop():
+    global code_stored, activation_code, activation_count, learning_mode, last_activation_time
+    try:
+        while True:
+            if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                red_pulse()
+                if not code_stored and not learning_mode:
+                    code = read_ir_code()
+                    if code:
+                        activation_code = code
+                        code_stored = True
+                        print("Activation code stored")
+            elif learning_mode:
+                code = read_ir_code()
+                if code:
+                    activation_code = code
+                    code_stored = True
+                    learning_mode = False
+                    print("New activation code learned and stored")
+            else:
+                if code_stored:
+                    code = read_ir_code()
+                    if code and (time.time() - last_activation_time >= cooldown_period):
+                        blue_chase()
+                        if code == activation_code:
+                            activation_count += 1
+                            print("Successful Test")
+                            send_udp_command(udp_text)
+                            send_grafana_metric(activation_count)
+                            last_activation_time = time.time()
+                else:
+                    green_chase()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        GPIO.cleanup()
+
+if __name__ == '__main__':
+    threading.Thread(target=main_loop).start()
+    app.run(debug=True, host='0.0.0.0')
