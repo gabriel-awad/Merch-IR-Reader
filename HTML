@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IR Control Interface</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      color: #333;
+      text-align: center;
+      padding: 50px;
+    }
+    h1 {
+      color: #4CAF50;
+    }
+    p {
+      font-size: 1.2em;
+    }
+    form, .button-container {
+      margin-top: 20px;
+    }
+    label {
+      font-weight: bold;
+    }
+    input[type="text"], input[type="password"], button {
+      padding: 10px;
+      margin: 10px 0;
+      font-size: 1em;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    input[type="submit"], button {
+      padding: 10px 20px;
+      font-size: 1em;
+      color: white;
+      background-color: #4CAF50;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    input[type="submit"]:hover, button:hover {
+      background-color: #45a049;
+    }
+  </style>
+  <script>
+    function validateForm() {
+      let code = document.getElementById('activation_code').value;
+      if (code === '') {
+        alert('Please enter a code.');
+        return false;
+      }
+      return true;
+    }
+  </script>
+</head>
+<body>
+  <h1>IR Control Interface</h1>
+  <form action="/login" method="POST">
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password">
+    <input type="submit" value="Login">
+  </form>
+  <div id="content" style="display:none;">
+    <p>Current Activation Code: {{ code }}</p>
+    <p>Activation Count: {{ count }}</p>
+    <form action="/set_code" method="POST" onsubmit="return validateForm()">
+      <label for="activation_code">Enter New Activation Code:</label>
+      <input type="text" id="activation_code" name="activation_code">
+      <input type="submit" value="Set Code">
+    </form>
+    <div class="button-container">
+      <button onclick="startLearning()">Learn New IR Code</button>
+    </div>
+  </div>
+  <script>
+    function startLearning() {
+      fetch('/start_learning')
+        .then(response => response.text())
+        .then(data => alert(data));
+    }
+  </script>
+</body>
+</html>
