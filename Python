@@ -4,7 +4,7 @@ import board
 import neopixel
 import socket
 from adafruit_irremote import IRDecodeError, GenericDecode
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for
 import threading
 import requests
 
@@ -29,6 +29,15 @@ learning_mode = False
 cooldown_period = 0
 last_activation_time = 0
 
+# UDP settings
+udp_ip = "127.0.0.1"
+udp_port = 5005
+udp_text = "Successful Test"
+
+# Grafana settings
+grafana_url = 'http://your-grafana-server/api/annotations' # Change this to your Grafana URL
+grafana_api_key = 'your-grafana-api-key' # Change this to your Grafana API key
+
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(RECV_PIN, GPIO.IN)
@@ -38,26 +47,10 @@ GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 app = Flask(__name__)
 app.secret_key = 'supersecretkey'  # Change this to a more secure key
 
-# Password for access
-PASSWORD = 'yourpassword'  # Change this to your desired password
-
-# Grafana server URL
-GRAFANA_URL = 'http://your-grafana-server/api/annotations' # Change this to your Grafana URL
-GRAFANA_API_KEY = 'your-grafana-api-key' # Change this to your Grafana API key
-
 @app.route('/')
 def index():
-    if 'logged_in' in session:
-        global activation_code, activation_count
-        return render_template('index.html', code=activation_code, count=activation_count)
-    return render_template('login.html')
-
-@app.route('/login', methods=['POST'])
-def login():
-    if request.form['password'] == PASSWORD:
-        session['logged_in'] = True
-        return redirect(url_for('index'))
-    return 'Incorrect password. <a href="/">Try again</a>'
+    global activation_code, activation_count
+    return render_template('index.html', code=activation_code, count=activation_count)
 
 @app.route('/set_code', methods=['POST'])
 def set_code():
@@ -72,6 +65,13 @@ def set_cooldown():
     cooldown_period = int(request.form['cooldown'])
     return redirect(url_for('index'))
 
+@app.route('/set_grafana', methods=['POST'])
+def set_grafana():
+    global grafana_url, grafana_api_key
+    grafana_url = request.form['grafana_url']
+    grafana_api_key = request.form['grafana_api_key']
+    return redirect(url_for('index'))
+
 @app.route('/reset_counter', methods=['POST'])
 def reset_counter():
     global activation_count
@@ -84,6 +84,19 @@ def start_learning():
     global learning_mode
     learning_mode = True
     return 'Learning mode activated. Point your IR remote at the receiver and press a button.'
+
+@app.route('/set_udp', methods=['POST'])
+def set_udp():
+    global udp_ip, udp_port, udp_text
+    udp_ip = request.form['udp_ip']
+    udp_port = int(request.form['udp_port'])
+    udp_text = request.form['udp_text']
+    return redirect(url_for('index'))
+
+@app.route('/test_udp', methods=['GET'])
+def test_udp():
+    send_udp_command(udp_text)
+    return 'UDP Command sent.'
 
 def green_chase():
     for i in range(NUM_LEDS):
@@ -119,53 +132,6 @@ def read_ir_code():
         return None
 
 def send_udp_command(command):
-    udp_ip = "127.0.0.1" # change to your target IP
-    udp_port = 5005
+    global udp_ip, udp_port
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(command.encode('utf-8'), (udp_ip, udp_port))
-
-def send_grafana_metric(value):
-    headers = {
-        'Authorization': f'Bearer {GRAFANA_API_KEY}',
-        'Content-Type': 'application/json'
-    }
-    data = {
-        "tags": ["activation_count"],
-        "text": f"Activation Count: {value}"
-    }
-    response = requests.post(GRAFANA_URL, headers=headers, json=data)
-    if response.status_code == 200:
-        print("Metric sent to Grafana")
-    else:
-        print(f"Failed to send metric to Grafana: {response.content}")
-
-def main_loop():
-    global code_stored, activation_code, activation_count, learning_mode, last_activation_time
-    try:
-        while True:
-            if GPIO.input(BUTTON_PIN) == GPIO.LOW:
-                red_pulse()
-                if not code_stored and not learning_mode:
-                    code = read_ir_code()
-                    if code:
-                        activation_code = code
-                        code_stored = True
-                        print("Activation code stored")
-            elif learning_mode:
-                code = read_ir_code()
-                if code:
-                    activation_code = code
-                    code_stored = True
-                    learning_mode = False
-                    print("New activation code learned and stored")
-            else:
-                if code_stored:
-                    code = read_ir_code()
-                    if code and (time.time() - last_activation_time >= cooldown_period):
-                        blue_chase()
-                        if code == activation_code:
-                            activation_count += 1
-                            print("Successful Test")
-                            send_udp_command("Successful Test")
-                            send_grafana_metric(activation_count)
-                            last[_{{{CITATION{{{_1{](https://github.com/buribalazs/smooth-drag-order/tree/7b40d21d076c3e31765f61481f537beaf4c5ec9f/README.md)
+    sock.sendto(command.encode('utf-8'), (udp_ip, udp_port[_{{{CITATION{{{_1{](https://github.com/sagnikghoshcr7/Three.js/tree/e306e5900993f46629c9c9d856f911b2785e4f24/03-basic-scene%2FREADME.md)
