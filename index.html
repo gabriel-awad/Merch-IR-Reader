@@ -58,6 +58,16 @@
       }
       return true;
     }
+    function startLearning() {
+      fetch('/start_learning')
+        .then(response => response.text())
+        .then(data => alert(data));
+    }
+    function testUDP() {
+      fetch('/test_udp')
+        .then(response => response.text())
+        .then(data => alert(data));
+    }
   </script>
 </head>
 <body>
@@ -102,17 +112,5 @@
   <footer>
     Designed by Gabriel Awad
   </footer>
-  <script>
-    function startLearning() {
-      fetch('/start_learning')
-        .then(response => response.text())
-        .then(data => alert(data));
-    }
-    function testUDP() {
-      fetch('/test_udp')
-        .then(response => response.text())
-        .then(data => alert(data));
-    }
-  </script>
 </body>
 </html>
