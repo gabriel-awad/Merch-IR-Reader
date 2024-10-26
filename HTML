@@ -24,7 +24,7 @@
     label {
       font-weight: bold;
     }
-    input[type="text"], input[type="password"], button {
+    input[type="text"], input[type="password"], input[type="number"], button {
       padding: 10px;
       margin: 10px 0;
       font-size: 1em;
@@ -69,6 +69,14 @@
       <label for="activation_code">Enter New Activation Code:</label>
       <input type="text" id="activation_code" name="activation_code">
       <input type="submit" value="Set Code">
+    </form>
+    <form action="/set_cooldown" method="POST">
+      <label for="cooldown">Enter Cooldown Period (seconds):</label>
+      <input type="number" id="cooldown" name="cooldown" min="0">
+      <input type="submit" value="Set Cooldown">
+    </form>
+    <form action="/reset_counter" method="POST">
+      <input type="submit" value="Reset Counter">
     </form>
     <div class="button-container">
       <button onclick="startLearning()">Learn New IR Code</button>
