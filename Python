@@ -6,6 +6,7 @@ import socket
 from adafruit_irremote import IRDecodeError, GenericDecode
 from flask import Flask, render_template, request, redirect, url_for, session
 import threading
+import requests
 
 # GPIO Pins
 RECV_PIN = 17 # Pin where the IR receiver is connected (BCM numbering)
@@ -25,6 +26,8 @@ activation_code = None
 code_stored = False
 activation_count = 0
 learning_mode = False
+cooldown_period = 0
+last_activation_time = 0
 
 # Setup GPIO
 GPIO.setmode(GPIO.BCM)
@@ -37,6 +40,10 @@ app.secret_key = 'supersecretkey'  # Change this to a more secure key
 
 # Password for access
 PASSWORD = 'yourpassword'  # Change this to your desired password
+
+# Grafana server URL
+GRAFANA_URL = 'http://your-grafana-server/api/annotations' # Change this to your Grafana URL
+GRAFANA_API_KEY = 'your-grafana-api-key' # Change this to your Grafana API key
 
 @app.route('/')
 def index():
@@ -57,6 +64,19 @@ def set_code():
     global activation_code, code_stored
     activation_code = int(request.form['activation_code'])
     code_stored = True
+    return redirect(url_for('index'))
+
+@app.route('/set_cooldown', methods=['POST'])
+def set_cooldown():
+    global cooldown_period
+    cooldown_period = int(request.form['cooldown'])
+    return redirect(url_for('index'))
+
+@app.route('/reset_counter', methods=['POST'])
+def reset_counter():
+    global activation_count
+    activation_count = 0
+    send_grafana_metric(activation_count)
     return redirect(url_for('index'))
 
 @app.route('/start_learning', methods=['GET'])
@@ -104,8 +124,23 @@ def send_udp_command(command):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.sendto(command.encode('utf-8'), (udp_ip, udp_port))
 
+def send_grafana_metric(value):
+    headers = {
+        'Authorization': f'Bearer {GRAFANA_API_KEY}',
+        'Content-Type': 'application/json'
+    }
+    data = {
+        "tags": ["activation_count"],
+        "text": f"Activation Count: {value}"
+    }
+    response = requests.post(GRAFANA_URL, headers=headers, json=data)
+    if response.status_code == 200:
+        print("Metric sent to Grafana")
+    else:
+        print(f"Failed to send metric to Grafana: {response.content}")
+
 def main_loop():
-    global code_stored, activation_code, activation_count, learning_mode
+    global code_stored, activation_code, activation_count, learning_mode, last_activation_time
     try:
         while True:
             if GPIO.input(BUTTON_PIN) == GPIO.LOW:
@@ -126,19 +161,11 @@ def main_loop():
             else:
                 if code_stored:
                     code = read_ir_code()
-                    if code:
+                    if code and (time.time() - last_activation_time >= cooldown_period):
                         blue_chase()
                         if code == activation_code:
                             activation_count += 1
                             print("Successful Test")
                             send_udp_command("Successful Test")
-                else:
-                    green_chase()
-    except KeyboardInterrupt:
-        pass
-    finally:
-        GPIO.cleanup()
-
-if __name__ == '__main__':
-    threading.Thread(target=main_loop).start()
-    app.run(debug=True, host='0.0.0.0')
+                            send_grafana_metric(activation_count)
+                            last[_{{{CITATION{{{_1{](https://github.com/buribalazs/smooth-drag-order/tree/7b40d21d076c3e31765f61481f537beaf4c5ec9f/README.md)
