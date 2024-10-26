@@ -1,0 +1,144 @@
+import RPi.GPIO as GPIO
+import time
+import board
+import neopixel
+import socket
+from adafruit_irremote import IRDecodeError, GenericDecode
+from flask import Flask, render_template, request, redirect, url_for, session
+import threading
+
+# GPIO Pins
+RECV_PIN = 17 # Pin where the IR receiver is connected (BCM numbering)
+BUTTON_PIN = 27 # Pin where the button is connected
+LED_PIN = board.D18 # Pin where the NeoPixel ring is connected
+
+# Number of LEDs in the NeoPixel ring
+NUM_LEDS = 16
+
+# Initialize the NeoPixel strip
+strip = neopixel.NeoPixel(LED_PIN, NUM_LEDS, brightness=0.2, auto_write=False)
+
+# Initialize IR decoder
+decoder = GenericDecode()
+
+activation_code = None
+code_stored = False
+activation_count = 0
+learning_mode = False
+
+# Setup GPIO
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(RECV_PIN, GPIO.IN)
+GPIO.setup(BUTTON_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+# Flask app setup
+app = Flask(__name__)
+app.secret_key = 'supersecretkey'  # Change this to a more secure key
+
+# Password for access
+PASSWORD = 'yourpassword'  # Change this to your desired password
+
+@app.route('/')
+def index():
+    if 'logged_in' in session:
+        global activation_code, activation_count
+        return render_template('index.html', code=activation_code, count=activation_count)
+    return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login():
+    if request.form['password'] == PASSWORD:
+        session['logged_in'] = True
+        return redirect(url_for('index'))
+    return 'Incorrect password. <a href="/">Try again</a>'
+
+@app.route('/set_code', methods=['POST'])
+def set_code():
+    global activation_code, code_stored
+    activation_code = int(request.form['activation_code'])
+    code_stored = True
+    return redirect(url_for('index'))
+
+@app.route('/start_learning', methods=['GET'])
+def start_learning():
+    global learning_mode
+    learning_mode = True
+    return 'Learning mode activated. Point your IR remote at the receiver and press a button.'
+
+def green_chase():
+    for i in range(NUM_LEDS):
+        strip[i] = (0, 255, 0)
+        strip.show()
+        time.sleep(0.05)
+        strip[i] = (0, 0, 0)
+
+def red_pulse():
+    for _ in range(3):  # Number of pulses
+        for brightness in range(0, 256, 5):
+            strip.fill((brightness, 0, 0))
+            strip.show()
+            time.sleep(0.005)
+        for brightness in range(255, -1, -5):
+            strip.fill((brightness, 0, 0))
+            strip.show()
+            time.sleep(0.005)
+
+def blue_chase():
+    for i in range(NUM_LEDS):
+        strip[i] = (0, 0, 255)
+        strip.show()
+        time.sleep(0.05)
+        strip[i] = (0, 0, 0)
+
+def read_ir_code():
+    try:
+        pulses = decoder.read_pulses(RECV_PIN)
+        code = decoder.decode_bits(pulses)
+        return code
+    except IRDecodeError:
+        return None
+
+def send_udp_command(command):
+    udp_ip = "127.0.0.1" # change to your target IP
+    udp_port = 5005
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(command.encode('utf-8'), (udp_ip, udp_port))
+
+def main_loop():
+    global code_stored, activation_code, activation_count, learning_mode
+    try:
+        while True:
+            if GPIO.input(BUTTON_PIN) == GPIO.LOW:
+                red_pulse()
+                if not code_stored and not learning_mode:
+                    code = read_ir_code()
+                    if code:
+                        activation_code = code
+                        code_stored = True
+                        print("Activation code stored")
+            elif learning_mode:
+                code = read_ir_code()
+                if code:
+                    activation_code = code
+                    code_stored = True
+                    learning_mode = False
+                    print("New activation code learned and stored")
+            else:
+                if code_stored:
+                    code = read_ir_code()
+                    if code:
+                        blue_chase()
+                        if code == activation_code:
+                            activation_count += 1
+                            print("Successful Test")
+                            send_udp_command("Successful Test")
+                else:
+                    green_chase()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        GPIO.cleanup()
+
+if __name__ == '__main__':
+    threading.Thread(target=main_loop).start()
+    app.run(debug=True, host='0.0.0.0')
