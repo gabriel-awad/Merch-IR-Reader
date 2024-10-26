@@ -21,4 +21,20 @@ sudo pip3 install flask
 # Install Requests
 sudo pip3 install requests
 
+# Install build tools for rpi_ws281x
+sudo apt-get install -y build-essential python-dev git scons swig
+
+# Clone and install rpi_ws281x
+git clone https://github.com/jgarff/rpi_ws281x.git
+cd rpi_ws281x
+sudo scons
+sudo scons install
+cd python
+sudo python3 setup.py build
+sudo python3 setup.py install
+
+# Cleanup
+cd ../..
+rm -rf rpi_ws281x
+
 echo "All dependencies have been installed successfully!"
