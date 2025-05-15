@@ -22,7 +22,7 @@ import requests
 # GPIO Pins
 RECV_PIN = 17 # Pin where the IR receiver is connected (BCM numbering)
 BUTTON_PIN = 27 # Pin where the button is connected
-LED_PIN = board.D18 # Pin where the NeoPixel ring is connected
+LED_PIN = board.18 # Pin where the NeoPixel ring is connected
 
 # Number of LEDs in the NeoPixel ring
 NUM_LEDS = 16
@@ -41,7 +41,7 @@ cooldown_period = 0
 last_activation_time = 0
 
 # UDP settings
-udp_ip = "127.0.0.1"
+udp_ip = "10.40.32.51"
 udp_port = 5005
 udp_text = "Successful Test"
 
@@ -131,7 +131,7 @@ def blue_chase():
     for i in range(NUM_LEDS):
         strip[i] = (0, 0, 255)
         strip.show()
-        time.sleep(0.05)
+        time.sleep(0.5)
         strip[i] = (0, 0, 0)
 
 def read_ir_code():
