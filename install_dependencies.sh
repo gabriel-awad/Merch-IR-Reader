@@ -37,4 +37,4 @@ sudo python3 setup.py install
 cd ../..
 rm -rf rpi_ws281x
 
-echo "All dependencies have been installed successfully!"
+echo "All dependencies have been installed successfully! You are now free to close this window!"
